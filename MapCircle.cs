@@ -1,4 +1,5 @@
 using System;
+using PugMod;
 using UnityEngine;
 
 namespace MapExtras {
@@ -28,6 +29,7 @@ namespace MapExtras {
 
         public void SetRadius(float value) {
             radius = value;
+            ConfigSystem.SetFloat("General", "CircleRadius", radius);
             UpdateTexture();
         }
 
