@@ -9,15 +9,21 @@ namespace MapExtras {
         
         private const string TEXT_FIELD_PREFAB_PATH = "Assets/MapExtras/MapExtras_CircleRadiusInputField.prefab";
         private GameObject textFieldPrefab = null;
+        private const string PLAYER_MAP_MARKER_PREFAB_PATH = "Assets/MapExtras/MapExtras_PlayerMapMarker.prefab";
+        public GameObject playerMapMarkerPrefab = null;
+
 
         public float startingCircleRadius = 0;
         public Color circleColor = new Color(0.96f, 0.62f, 0.11f, 0.5f);
         public float circleWidth = 35;
         
         public bool foundMapPartsContainer = false;
+        public Transform mapPartsContainer = null;
         public MapUI mapUI = null;
         public MapCircle circle = null;
         public CircleRadiusInputField circleRadiusInputField = null;
+        public PugText testMarkerText = null;
+        public MapMarkerUIElement mapMarkerTest = null;
         
         void Awake() {
             if (instance == null) {
@@ -33,6 +39,7 @@ namespace MapExtras {
             LoadConfig();
             
             textFieldPrefab = MapExtrasMod.assetBundle.LoadAsset<GameObject>(TEXT_FIELD_PREFAB_PATH);
+            playerMapMarkerPrefab = MapExtrasMod.assetBundle.LoadAsset<GameObject>(PLAYER_MAP_MARKER_PREFAB_PATH);
 			
             MapExtrasMod.Log("Successfully initialized the Map Manager object.");
         }
@@ -44,7 +51,8 @@ namespace MapExtras {
                 mapUI = mapUITransform.GetComponent<MapUI>();
                 
                 Transform mapUIContainer = FindMapUIContainer(mapUITransform);
-                Transform mapPartsContainer = FindMapPartsContainer(mapUIContainer);
+                Transform mapUIUserPositionOffset = FindMapUIUserPositionOffset(mapUIContainer);
+                mapPartsContainer = FindMapPartsContainer(mapUIUserPositionOffset);
                 Transform largeMapBorder = FindLargeMapBorder(mapUIContainer);
 
                 circle = new MapCircle(mapPartsContainer, startingCircleRadius, circleWidth, circleColor);
@@ -54,13 +62,16 @@ namespace MapExtras {
                 circleRadiusInputField.transform.localScale = Vector3.one;
                 circleRadiusInputField.transform.localPosition = new Vector3(7.5f, -7.25f, 0.0f);
                 circleRadiusInputField.circle = circle;
-
-                if (startingCircleRadius > 0) {
-                    circleRadiusInputField.SetInputText("" + startingCircleRadius);
-                }
+                if (startingCircleRadius > 0) circleRadiusInputField.SetInputText("" + startingCircleRadius);
+                
+                PlayerMapMarker.CreatePlayerMapMarkers(mapUIUserPositionOffset);
                 
                 MapExtrasMod.Log("Found map parts container.");
                 foundMapPartsContainer = true;
+            }
+
+            if (mapPartsContainer != null) {
+                PlayerMapMarker.CreatePlayerMapMarkers(mapPartsContainer);
             }
         }
 
@@ -96,13 +107,15 @@ namespace MapExtras {
             return mapUI.GetChild(0);
         }
 
-        Transform FindMapPartsContainer(Transform mapUIContainer) { // Global Objects (Main Manager)(Clone)/Rendering/UI Camera/IngameUI/MapUI/container/miniMapPositionOffset/Zoom/userPositionOffset/playerPositionOffset/mapPartsContainer/
+        Transform FindMapUIUserPositionOffset(Transform mapUIContainer) {
             Transform mapUIMinimapPositionOffset = mapUIContainer.GetChild(0);
             
             Transform mapUIZoomOffset = mapUIMinimapPositionOffset.GetChild(0);
             
-            Transform mapUIUserPositionOffset = mapUIZoomOffset.GetChild(0);
-            
+            return mapUIZoomOffset.GetChild(0);
+        }
+
+        Transform FindMapPartsContainer(Transform mapUIUserPositionOffset) { // Global Objects (Main Manager)(Clone)/Rendering/UI Camera/IngameUI/MapUI/container/miniMapPositionOffset/Zoom/userPositionOffset/playerPositionOffset/mapPartsContainer/
             Transform mapUIPlayerPositionOffset = mapUIUserPositionOffset.GetChild(1);
 
             return mapUIPlayerPositionOffset.GetChild(0);
