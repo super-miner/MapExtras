@@ -8,6 +8,7 @@
     - Make some classes (like MapCircle) derive from MonoBehaviour
     - Find container objects using name instead of child id and fix the debug system for this process
     - Move config logic from MapManager to its own class
+    - Update to use CoreLib
 - Display player's usernames and health on the map
 - Allow you to set border colors for each portal icon on the map
 - Fix lag when loading large circles
