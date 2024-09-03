@@ -19,6 +19,8 @@ namespace MapExtras {
         
         public bool foundMapPartsContainer = false;
         public Transform mapPartsContainer = null;
+        public Material mapContentMaterial = null;
+        public int maskRectId = -1;
         public MapUI mapUI = null;
         public MapCircle circle = null;
         public CircleRadiusInputField circleRadiusInputField = null;
@@ -54,17 +56,19 @@ namespace MapExtras {
                 Transform mapUIUserPositionOffset = FindMapUIUserPositionOffset(mapUIContainer);
                 mapPartsContainer = FindMapPartsContainer(mapUIUserPositionOffset);
                 Transform largeMapBorder = FindLargeMapBorder(mapUIContainer);
+                mapContentMaterial = Instantiate<Material>(mapUI.mapContentMaterial);
+                maskRectId = Shader.PropertyToID("_MaskRect");
 
                 circle = new MapCircle(mapPartsContainer, startingCircleRadius, circleWidth, circleColor);
                 
-                GameObject circleRadiusInputFieldGO = UnityEngine.Object.Instantiate(textFieldPrefab, largeMapBorder, true);
+                GameObject circleRadiusInputFieldGO = Instantiate(textFieldPrefab, largeMapBorder, true);
                 circleRadiusInputField = circleRadiusInputFieldGO.GetComponent<CircleRadiusInputField>();
                 circleRadiusInputField.transform.localScale = Vector3.one;
                 circleRadiusInputField.transform.localPosition = new Vector3(7.5f, -7.25f, 0.0f);
                 circleRadiusInputField.circle = circle;
                 if (startingCircleRadius > 0) circleRadiusInputField.SetInputText("" + startingCircleRadius);
                 
-                PlayerMapMarker.CreatePlayerMapMarkers(mapUIUserPositionOffset);
+                //PlayerMapMarker.CreatePlayerMapMarkers(mapUIUserPositionOffset);
                 
                 MapExtrasMod.Log("Found map parts container.");
                 foundMapPartsContainer = true;
@@ -73,6 +77,11 @@ namespace MapExtras {
             if (mapPartsContainer != null) {
                 PlayerMapMarker.CreatePlayerMapMarkers(mapPartsContainer);
             }
+        }
+
+        void LateUpdate() {
+            Vector4 maskRect = GetMaskRect(mapUI.isShowingBigMap ? mapUI.largeMapBackground.bounds : mapUI.miniMapBackground.bounds);
+            mapContentMaterial.SetVector(maskRectId, new Vector4(maskRect.x, maskRect.y, 1f / maskRect.z, 1f / maskRect.w));
         }
 
         void LoadConfig() {
@@ -100,7 +109,7 @@ namespace MapExtras {
 
             Transform ingameUI = uiCamera.GetChild(0);
 
-            return ingameUI.GetChild(13);
+            return ingameUI.GetChild(16);
         }
 
         Transform FindMapUIContainer(Transform mapUI) {
@@ -125,16 +134,10 @@ namespace MapExtras {
             return mapUIContainer.GetChild(1);
         }
         
-        GameObject FindTextPrefab(Transform ingameUI) { // TODO: Figure out how to create a prefab for this instead of using existing text.
-            Transform playerHealthBar = ingameUI.GetChild(0);
-
-            Transform playerHealthContainer = playerHealthBar.GetChild(0);
-
-            Transform playerHealthTextContainer = playerHealthContainer.GetChild(6);
-
-            Transform healthTextNumber = playerHealthTextContainer.GetChild(1);
-
-            return healthTextNumber.gameObject;
+        Vector4 GetMaskRect(Bounds bounds) {
+            Vector3 min = bounds.min;
+            Vector3 max = bounds.max;
+            return new Vector4(min.x, min.y, max.x - min.x, max.y - min.y);
         }
     }
 }

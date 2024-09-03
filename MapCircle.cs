@@ -20,6 +20,7 @@ namespace MapExtras {
             gameObject.transform.localPosition = new Vector3(1.0f / 32.0f, 1.0f / 32.0f, 0.0f);
 
             spriteRenderer = gameObject.GetComponent<SpriteRenderer>();
+            spriteRenderer.material = MapManager.instance.mapContentMaterial;
             
             this.lineWidth = lineWidth;
             this.color = color;
