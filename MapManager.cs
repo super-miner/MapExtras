@@ -1,3 +1,4 @@
+using MapExtras.Common;
 using PugMod;
 using UnityEngine;
 
@@ -48,15 +49,15 @@ namespace MapExtras {
 
         void Update() {
             if (!foundMapPartsContainer) {
-                Transform mapUITransform = FindMapUI();
+                Transform mapUITransform = Util.GetChildByPath(Manager.ui.transform.parent.parent, "Rendering/UI Camera/IngameUI/MapUI");
 
                 mapUI = mapUITransform.GetComponent<MapUI>();
                 
-                Transform mapUIContainer = FindMapUIContainer(mapUITransform);
-                Transform mapUIUserPositionOffset = FindMapUIUserPositionOffset(mapUIContainer);
-                mapPartsContainer = FindMapPartsContainer(mapUIUserPositionOffset);
-                Transform largeMapBorder = FindLargeMapBorder(mapUIContainer);
-                mapContentMaterial = Instantiate<Material>(mapUI.mapContentMaterial);
+                Transform mapUIContainer = Util.GetChildByPath(mapUITransform, "container");
+                Transform mapUIUserPositionOffset = Util.GetChildByPath(mapUIContainer, "miniMapPositionOffset/Zoom/userPositionOffset");
+                mapPartsContainer = Util.GetChildByPath(mapUIUserPositionOffset, "playerPositionOffset/mapPartsContainer");
+                Transform largeMapBorder = Util.GetChildByPath(mapUIContainer, "largeMapBorder");
+                mapContentMaterial = Instantiate(mapUI.mapContentMaterial);
                 maskRectId = Shader.PropertyToID("_MaskRect");
 
                 circle = new MapCircle(mapPartsContainer, startingCircleRadius, circleWidth, circleColor);
@@ -75,13 +76,15 @@ namespace MapExtras {
             }
 
             if (mapPartsContainer != null) {
-                PlayerMapMarker.CreatePlayerMapMarkers(mapPartsContainer);
+                //PlayerMapMarker.CreatePlayerMapMarkers(mapPartsContainer);
             }
         }
 
         void LateUpdate() {
-            Vector4 maskRect = GetMaskRect(mapUI.isShowingBigMap ? mapUI.largeMapBackground.bounds : mapUI.miniMapBackground.bounds);
-            mapContentMaterial.SetVector(maskRectId, new Vector4(maskRect.x, maskRect.y, 1f / maskRect.z, 1f / maskRect.w));
+            if (foundMapPartsContainer) {
+                Vector4 maskRect = GetMaskRect(mapUI.isShowingBigMap ? mapUI.largeMapBackground.bounds : mapUI.miniMapBackground.bounds);
+                mapContentMaterial.SetVector(maskRectId, new Vector4(maskRect.x, maskRect.y, 1f / maskRect.z, 1f / maskRect.w));
+            }
         }
 
         void LoadConfig() {
@@ -95,43 +98,6 @@ namespace MapExtras {
         void UpdateConfig() {
             int configVersion = -1;
             ConfigSystem.GetInt("ConfigVersion", "DoNotEdit", ref configVersion, CONFIG_VERSION);
-        }
-
-        Transform FindMapUI() {
-            if (!Manager.ui) {
-                MapExtrasMod.Log("Could not find UI Manager.");
-                return null;
-            }
-            
-            Transform renderingParent = Manager.ui.transform.parent.parent.GetChild(2); // GlobalObjects (Main Manager)(Clone)/Rendering
-
-            Transform uiCamera = renderingParent.transform.GetChild(1);
-
-            Transform ingameUI = uiCamera.GetChild(0);
-
-            return ingameUI.GetChild(16);
-        }
-
-        Transform FindMapUIContainer(Transform mapUI) {
-            return mapUI.GetChild(0);
-        }
-
-        Transform FindMapUIUserPositionOffset(Transform mapUIContainer) {
-            Transform mapUIMinimapPositionOffset = mapUIContainer.GetChild(0);
-            
-            Transform mapUIZoomOffset = mapUIMinimapPositionOffset.GetChild(0);
-            
-            return mapUIZoomOffset.GetChild(0);
-        }
-
-        Transform FindMapPartsContainer(Transform mapUIUserPositionOffset) { // Global Objects (Main Manager)(Clone)/Rendering/UI Camera/IngameUI/MapUI/container/miniMapPositionOffset/Zoom/userPositionOffset/playerPositionOffset/mapPartsContainer/
-            Transform mapUIPlayerPositionOffset = mapUIUserPositionOffset.GetChild(1);
-
-            return mapUIPlayerPositionOffset.GetChild(0);
-        }
-
-        Transform FindLargeMapBorder(Transform mapUIContainer) {
-            return mapUIContainer.GetChild(1);
         }
         
         Vector4 GetMaskRect(Bounds bounds) {
