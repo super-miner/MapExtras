@@ -4,7 +4,7 @@ using UnityEngine;
 
 namespace MapExtras {
 	public class MapExtrasMod : IMod {
-		public static string MOD_VERSION = "1.0.2";
+		public static string MOD_VERSION = "1.1.1";
 		public static string MOD_NAME = "Map Extras";
 		public static string MOD_ID = "MapExtras";
 		

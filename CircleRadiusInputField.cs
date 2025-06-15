@@ -3,7 +3,6 @@ using UnityEngine;
 namespace MapExtras {
     public class CircleRadiusInputField : RadicalMenuOptionTextInput {
         public Vector3 textBoxSize = Vector3.one;
-        [HideInInspector] public MapCircle circle = null;
 
         protected string oldText = "";
         
@@ -30,16 +29,16 @@ namespace MapExtras {
             clickCollider.center = new Vector3(xOffset, yOffset, 0.0f);
             clickCollider.size = textBoxSize;
 
-            oldText = pugText.textString;
+            oldText = pugText.GetText();
         }
 
         protected override void Update() {
             base.Update();
 
-            if (oldText != pugText.textString) {
-                OnTextChange(oldText, ref pugText.textString);
+            if (oldText != pugText.displayedTextString) {
+                OnTextChange(oldText, ref pugText.displayedTextString);
                 pugText.Render(true);
-                oldText = pugText.textString;
+                oldText = pugText.displayedTextString;
             }
 
             if (MapManager.instance.mapUI.isShowingBigMap) {
@@ -54,20 +53,17 @@ namespace MapExtras {
         }
 
         protected virtual void OnTextChange(string oldText, ref string newText) {
-            if (pugText.textString != "") {
-                int newRadius = int.Parse(newText);
-                
-                if (newRadius <= 4096) {
-                    circle.SetRadius(newRadius);
-                }
-                else {
-                    newText = "4096";
-                    circle.SetRadius(4096);
-                }
+            MapManager.instance.circleRadius = 0;
+            
+            if (string.IsNullOrEmpty(newText)) {
+                return;
             }
-            else {
-                circle.SetRadius(0);
+
+            if (!int.TryParse(newText, out int newRadius)) {
+                return;
             }
+
+            MapManager.instance.circleRadius = newRadius;
         }
     }
 }
